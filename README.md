@@ -5,6 +5,11 @@ Version 0.1
 
 Link Gravity Forms with Convio Surveys through the Convio Open API.
 
+## TODO
+* Better handling of various field types from Convio
+* Handle missing surveys when feed is already active
+* API improvements
+
 ## Requirements
 * Convio Open API access
 * WordPress 3.5
