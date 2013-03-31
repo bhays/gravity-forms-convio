@@ -129,7 +129,7 @@ class GFConvio {
 
     public static function check_update($update_plugins_option){
 		if ( get_option( 'gf_convio_version' ) != self::$version ) {
-			require_once( GF_CONVIO_PATH . '/inc/data.php' );
+			require_once( 'inc/data.php' );
 			GFConvioData::update_table();
 		}
 
