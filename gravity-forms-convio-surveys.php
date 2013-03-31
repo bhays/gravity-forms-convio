@@ -227,8 +227,8 @@ class GFConvio {
 
         ?>
         <style>
-            .valid_credentials{color:green;}
-            .invalid_credentials{color:red;}
+            .valid_credentials{color:green; padding-left: 25px !important; background: url(<?php echo self::get_base_url() ?>/images/tick.png) no-repeat left 8px;}
+            .invalid_credentials{color:red; padding-left: 25px !important;  background: url(<?php echo self::get_base_url() ?>/images/stop.png) no-repeat left 8px;}
         </style>
 
         <form method="post" action="">
@@ -457,38 +457,45 @@ class GFConvio {
     	if( !class_exists('ConvioOpenAPI') ){
 	    	require_once('inc/ConvioOpenAPI.php');
     	}
-    	
-    	extract($settings);
-    	
-        self::log_debug("Validating login for api key '{$apikey}', username '{$username}',  password '{$password}' and short name '{$shortname}'");
-        
-        $api = new ConvioOpenAPI;
-		$api->host            = 'secure2.convio.net';
-		$api->api_key         = $apikey;
-		$api->short_name      = $shortname;
-        $api->login_name      = $username;
-        $api->login_password  = $password;
+    	if( !empty($settings) ){
+	    	extract($settings);    	
+    	}
 
-		// Get Auth token
-		$auth = $api->call('SRConsAPI_getSingleSignOnToken');
-
-		// Set logs and return response
-		if( isset($auth->errorResponse) ){
-        	self::log_error("Login valid: false. Error " . $auth->errorResponse->code . " - " . $auth->errorResponse->message);
-        	return array('status' => false, 'message' => $auth->errorResponse->message);
+        if( !empty($username) && !empty($password) && !empty($apikey) && !empty($shortname) ) {
+	
+	        self::log_debug("Validating login for api key '{$apikey}', username '{$username}',  password '{$password}' and short name '{$shortname}'");
+	        
+	        $api = new ConvioOpenAPI;
+			$api->host            = 'secure2.convio.net';
+			$api->api_key         = $apikey;
+			$api->short_name      = $shortname;
+	        $api->login_name      = $username;
+	        $api->login_password  = $password;
+	
+			// Get Auth token
+			$auth = $api->call('SRConsAPI_getSingleSignOnToken');
+	
+			// Set logs and return response
+			if( isset($auth->errorResponse) ){
+	        	self::log_error("Login valid: false. Error " . $auth->errorResponse->code . " - " . $auth->errorResponse->message);
+	        	return array('status' => false, 'message' => $auth->errorResponse->message);
+			}
+			else {
+				self::log_debug("Login valid: true");
+	        	return array('status' => true);
+			}
 		}
-		else {
-			self::log_debug("Login valid: true");
-        	return array('status' => true);
-		}
+		return array('status' => false, 'message' => "No credentials set yet.");
     }
 
     private static function get_api() {
         //global convio settings
         $settings = get_option("gf_convio_settings");
         $api = null;
-
-        extract($settings);
+        
+        if( !empty($settings) ){
+	        extract($settings);        
+        }
 
         if( !empty($username) && !empty($password) && !empty($apikey) && !empty($shortname) ) {
 	    	if( !class_exists('ConvioOpenAPI') ){
@@ -621,7 +628,9 @@ class GFConvio {
 		                }
 		                else{
 							unset($field_map[$f->fieldName]);
-							$is_valid = false;                    
+							if( $f->fieldStatus == 'REQUIRED' ){
+								$is_valid = false;
+							}      
 						}
 					}	
             	}
@@ -1069,16 +1078,16 @@ class GFConvio {
 			if( $d->questionType == "ConsQuestion" ){
 				foreach( $d->questionTypeData->consRegInfoData->contactInfoField as $f){
 		            $selected_field = rgar($config["meta"]["field_map"], $f->fieldName);
-		            $required = "<span class='gfield_required'>*</span>";
+		            $required = $f->fieldStatus == 'REQUIRED' ? "<span class='gfield_required'>*</span>" : '';
 		            
-		            $error_class = empty($selected_field) && !empty($_POST["gf_convio_submit"]) ? " feeds_validation_error" : "";
+		            $error_class = $f->fieldStatus == 'REQUIRED' && empty($selected_field) && !empty($_POST["gf_convio_submit"]) ? " feeds_validation_error" : "";
 		            
 		            $str .= "<tr class='$error_class'><td class='convio_field_cell'>" . $f->label  . " $required</td><td class='convio_field_cell'>" . self::get_mapped_field_list($f->fieldName, $selected_field, $form_fields) . "</td></tr>";
 				}	
 			}
 			else {
 				$selected_field = rgar($config["meta"]["field_map"], 'question_'.$d->questionId);
-				$required = $d->questionRequired == true ? "<span class='gfield_required'>*</span>" : "";
+				$required = $d->questionRequired == true ? "<span class='gfield_required'>*</span>" : '';
 				$error_class = $d->questionRequired == true && empty($selected_field) && !empty($_POST["gf_convio_submit"]) ? " feeds_validation_error" : "";
 				$str .= "<tr class='$error_class'><td class='convio_field_cell'>" . $d->questionText . " $required</td><td class='convio_field_cell'>" . self::get_mapped_field_list('question_'.$d->questionId, $selected_field, $form_fields) . "</td></tr>";
 			}
