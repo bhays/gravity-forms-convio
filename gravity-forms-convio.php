@@ -1,7 +1,7 @@
 <?php
 /*
-Plugin Name: Gravity Forms Convio Surveys
-Plugin URI: https://github.com/bhays/gravity-forms-convio-surveys
+Plugin Name: Gravity Forms Convio Add-on
+Plugin URI: https://github.com/bhays/gravity-forms-convio
 Description: Integrates Gravity Forms with Convio allowing form submissions to be automatically sent to your Convio account
 Version: 0.1
 Author: Ben Hays
@@ -30,9 +30,9 @@ register_activation_hook( __FILE__, array("GFConvio", "add_permissions"));
 
 class GFConvio {
 
-    private static $path = "gravity-forms-convio-surveys/gravity-forms-convio-surveys.php";
+    private static $path = "gravity-forms-convio/gravity-forms-convio.php";
     private static $url = "http://www.gravityforms.com";
-    private static $slug = "gravity-forms-convio-surveys";
+    private static $slug = "gravity-forms-convio";
     private static $version = "0.1";
     private static $min_gravityforms_version = "1.5";
     private static $supported_fields = array(
@@ -220,7 +220,7 @@ class GFConvio {
 			$class = "valid_credentials";
 		}
 		else {
-			$message = __("Something went wrong, see the respons from Convio below.", "gravity-forms-convio");
+			$message = __("Something went wrong, see the response from Convio below.", "gravity-forms-convio");
 			$message .= '<br/>'.$is_valid['message'];
 			$class = "invalid_credentials";
 		}
@@ -235,7 +235,7 @@ class GFConvio {
             <?php wp_nonce_field("update", "gf_convio_update") ?>
             <h3><?php _e("Convio Open API Information", "gravity-forms-convio") ?></h3>
             <p style="text-align: left;">
-                <?php _e("Convio is a pain in the ass. Convio Open might not be so bad.", "gravity-forms-convio") ?>
+                <?php _e("Convio is a pain in the ass. Using the Convio Open API might not be so bad.", "gravity-forms-convio") ?>
             </p>
             <p style="text-align: left;">
 	            <?php _e(sprintf("Make sure your server IP is set through the Convio API Settings. Your current IP is: %s", $_SERVER['SERVER_ADDR']), 'gravity-forms-convio'); ?>
@@ -457,6 +457,7 @@ class GFConvio {
     	if( !class_exists('ConvioOpenAPI') ){
 	    	require_once('inc/ConvioOpenAPI.php');
     	}
+    	
     	if( !empty($settings) ){
 	    	extract($settings);    	
     	}
@@ -474,9 +475,13 @@ class GFConvio {
 	
 			// Get Auth token
 			$auth = $api->call('SRConsAPI_getSingleSignOnToken');
-	
+			
 			// Set logs and return response
-			if( isset($auth->errorResponse) ){
+			if( empty($auth) ){
+	        	self::log_error("Login valid: false. Nothing returned from Convio.");
+	        	return array('status' => false, 'message' => 'Site short name not found.');			
+			}
+			else if (isset($auth->errorResponse) ){
 	        	self::log_error("Login valid: false. Error " . $auth->errorResponse->code . " - " . $auth->errorResponse->message);
 	        	return array('status' => false, 'message' => $auth->errorResponse->message);
 			}

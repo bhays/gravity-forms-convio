@@ -1,4 +1,4 @@
-=== Gravity Forms Convio ===
+=== Gravity Forms Convio Add-on ===
 Contributors: benhays
 Donate link: 
 Tags: gravity forms, gravityforms, convio, convio open api, surveys
@@ -12,14 +12,14 @@ Link Gravity Forms with Convio Surveys through the Convio Open API.
 
 == Description ==
 
-Link Gravity Forms with Convio Surveys through the Convio Open API.
+Link Gravity Forms with Convio Surveys through the Convio Open API. Useful for adding constituants or names to email lists (surveys) managed by Convio.
 
 == Installation ==
 
 1. Install as a regular WordPress plugin
 2. Create a form with the appropriate fields for your survey
 3. Input Convio Open API credentials at Forms->Settings->Convio
-4. Navigate to Forms->Convio to setup limit feeds for the desired quantity fields
+4. Navigate to Forms->Convio to setup feeds for the desired forms
 
 == Frequently asked questions ==
 
@@ -35,6 +35,3 @@ Yes, although I make no guarantees.
 * Initial release
 
 == Upgrade notice ==
-
-
-
