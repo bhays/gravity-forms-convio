@@ -4,7 +4,7 @@ Donate link:
 Tags: gravity forms, gravityforms, convio, convio open api, surveys
 Requires at least: 3.3
 Tested up to: 3.5.1
-Stable tag: 0.1
+Stable tag: 0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,6 +30,9 @@ Yes, although I make no guarantees.
 == Screenshots ==
 
 == Changelog ==
+
+### 0.2
+* Fix whitespace/HTML issues from Convio question data
 
 ### 0.1
 * Initial release

@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms Convio Add-on
 Plugin URI: https://github.com/bhays/gravity-forms-convio
 Description: Integrates Gravity Forms with Convio allowing form submissions to be automatically sent to your Convio account
-Version: 0.1
+Version: 0.2
 Author: Ben Hays
 Author URI: http://benhays.com
 
@@ -33,7 +33,7 @@ class GFConvio {
     private static $path = "gravity-forms-convio/gravity-forms-convio.php";
     private static $url = "http://www.gravityforms.com";
     private static $slug = "gravity-forms-convio";
-    private static $version = "0.1";
+    private static $version = "0.2";
     private static $min_gravityforms_version = "1.5";
     private static $supported_fields = array(
 	    				"checkbox", "radio", "select", "text", "website", "textarea", "email", 
@@ -180,7 +180,7 @@ class GFConvio {
         // Adding submenu if user has access
         $permission = self::has_access("gravityforms_convio");
         if(!empty($permission))
-            $menus[] = array("name" => "gf_convio", "label" => __("Convio Surveys", "gravity-forms-convio"), "callback" =>  array("GFConvio", "convio_page"), "permission" => $permission);
+            $menus[] = array("name" => "gf_convio", "label" => __("Convio", "gravity-forms-convio"), "callback" =>  array("GFConvio", "convio_page"), "permission" => $permission);
 
         return $menus;
     }
@@ -578,7 +578,7 @@ class GFConvio {
         </script>
         <div class="wrap">
             <h2><?php _e("Convio Feed", "gravity-forms-convio") ?></h2>
-
+            <p><?php _e("Currently only works with Convio Surveys.", "gravity-forms-convio") ?></p>
         <?php
         //getting Convio API
         $api = self::get_api();
@@ -621,7 +621,7 @@ class GFConvio {
 
         	$field_map = array();
             foreach($details as $d){
-            	if( $d->questionType == 'ConsQuestion' ){
+				if( $d->questionType == 'ConsQuestion' ){
 	            	// Constituent data here
 					foreach( $d->questionTypeData->consRegInfoData->contactInfoField as $f){
 						$field_name = "convio_map_field_".$f->fieldName;
@@ -700,8 +700,8 @@ class GFConvio {
 				}
 
                 if (!$surveys):
-                    echo __("Could not load Convio surveys. <br/>Error: ", "gravity-forms-convio") . $api->errorMessage;
-                    self::log_debug("Could not load Convio surveys. Error " . $api->errorCode . " - " . $api->errorMessage);
+                    echo __("Could not load Convio data. <br/>Error: ", "gravity-forms-convio") . $api->errorMessage;
+                    self::log_debug("Could not load Convio data. Error " . $api->errorCode . " - " . $api->errorMessage);
                 else:
                     ?>
                     <select id="gf_convio_survey" name="gf_convio_survey" onchange="SelectList(jQuery(this).val());">
@@ -1055,8 +1055,14 @@ class GFConvio {
         $config = GFConvioData::get_feed($setting_id);
 
         //getting field map UI
-        $str = self::get_field_mapping($config, $form_id, $details);
-
+        $field_map = self::get_field_mapping($config, $form_id, $details);
+        
+        // Escape quotes and strip extra whitespace and line breaks
+        $field_map = str_replace("'","\'",$field_map);
+		//$field_map = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $field_map));
+        
+		self::log_debug("Field map is set to: " . $field_map);
+        
         //getting list of selection fields to be used by the optin
         $form_meta = RGFormsModel::get_form_meta($form_id);
         $selection_fields = GFCommon::get_selection_fields($form_meta, rgars($config, "meta/optin_field_id"));
@@ -1066,7 +1072,7 @@ class GFConvio {
         
         //fields meta
         $form = RGFormsModel::get_form_meta($form_id);
-        die("EndSelectForm('" . str_replace("'", "\'", $str) . "', " . GFCommon::json_encode($form) . ", '" . str_replace("'", "\'", $grouping) . "', " . json_encode($group_names) . " );");
+        die("EndSelectForm('".$field_map."', ".GFCommon::json_encode($form).", '" . str_replace("'", "\'", $grouping) . "', " . json_encode($group_names) . " );");
     }
 
     private static function get_field_mapping($config, $form_id, $details){
@@ -1075,6 +1081,7 @@ class GFConvio {
         $form_fields = self::get_form_fields($form_id);
 
         $str = "<table cellpadding='0' cellspacing='0'><tr><td class='convio_col_heading'>" . __("Survey Fields", "gravity-forms-convio") . "</td><td class='convio_col_heading'>" . __("Form Fields", "gravity-forms-convio") . "</td></tr>";
+        
         if(!isset($config["meta"]))
             $config["meta"] = array("field_map" => "");
 		
@@ -1087,14 +1094,14 @@ class GFConvio {
 		            
 		            $error_class = $f->fieldStatus == 'REQUIRED' && empty($selected_field) && !empty($_POST["gf_convio_submit"]) ? " feeds_validation_error" : "";
 		            
-		            $str .= "<tr class='$error_class'><td class='convio_field_cell'>" . $f->label  . " $required</td><td class='convio_field_cell'>" . self::get_mapped_field_list($f->fieldName, $selected_field, $form_fields) . "</td></tr>";
+		            $str .= "<tr class='$error_class'><td class='convio_field_cell'>".self::ws_clean($f->label)." $required</td><td class='convio_field_cell'>".self::get_mapped_field_list($f->fieldName, $selected_field, $form_fields)."</td></tr>";
 				}	
 			}
 			else {
 				$selected_field = rgar($config["meta"]["field_map"], 'question_'.$d->questionId);
 				$required = $d->questionRequired == true ? "<span class='gfield_required'>*</span>" : '';
 				$error_class = $d->questionRequired == true && empty($selected_field) && !empty($_POST["gf_convio_submit"]) ? " feeds_validation_error" : "";
-				$str .= "<tr class='$error_class'><td class='convio_field_cell'>" . $d->questionText . " $required</td><td class='convio_field_cell'>" . self::get_mapped_field_list('question_'.$d->questionId, $selected_field, $form_fields) . "</td></tr>";
+				$str .= "<tr class='$error_class'><td class='convio_field_cell'>".self::ws_clean($d->questionText)." $required</td><td class='convio_field_cell'>".self::get_mapped_field_list('question_'.$d->questionId, $selected_field, $form_fields)."</td></tr>";
 			}
 		}
 		
@@ -1386,7 +1393,15 @@ class GFConvio {
         else
             return false;
     }
-
+	
+	// Clean strings from Convio, we don't need any HTML or line breaks 
+    protected function ws_clean($string){
+	    $chars = array("
+", "\n", "\r", "chr(13)",  "\t", "\0", "\x0B");
+	    $string = str_replace($chars, '', trim(strip_tags($string)));
+	    return $string;
+    }
+    
     //Returns the url of the plugin's root folder
     protected function get_base_url(){
         return plugins_url(null, __FILE__);
