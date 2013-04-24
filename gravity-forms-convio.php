@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms Convio Add-on
 Plugin URI: https://github.com/bhays/gravity-forms-convio
 Description: Integrates Gravity Forms with Convio allowing form submissions to be automatically sent to your Convio account
-Version: 0.2
+Version: 0.3
 Author: Ben Hays
 Author URI: http://benhays.com
 
@@ -33,7 +33,7 @@ class GFConvio {
     private static $path = "gravity-forms-convio/gravity-forms-convio.php";
     private static $url = "http://www.gravityforms.com";
     private static $slug = "gravity-forms-convio";
-    private static $version = "0.2";
+    private static $version = "0.3";
     private static $min_gravityforms_version = "1.5";
     private static $supported_fields = array(
 	    				"checkbox", "radio", "select", "text", "website", "textarea", "email", 
@@ -203,7 +203,8 @@ class GFConvio {
             	"apikey" => stripslashes($_POST["gf_convio_apikey"]),
             	"username" => stripslashes($_POST["gf_convio_username"]), 
             	"password" => stripslashes($_POST["gf_convio_password"]), 
-            	"shortname" => $_POST["gf_convio_shortname"]
+            	"shortname" => $_POST["gf_convio_shortname"],
+            	"server" => stripslashes($_POST["gf_convio_server"]),
             );
             
             update_option("gf_convio_settings", $settings);
@@ -265,6 +266,13 @@ class GFConvio {
                     <th scope="row"><label for="gf_convio_password"><?php _e("API Password", "gravity-forms-convio"); ?></label> </th>
                     <td><input type="text" id="gf_convio_password" name="gf_convio_password" value="<?php echo esc_attr($settings["password"]) ?>"/></td>
                 </tr>
+				<tr>
+                    <th scope="row"><label for="gf_convio_server"><?php _e("Server URL", "gravity-forms-convio"); ?></label> </th>
+                    <td>
+                        <input type="text" id="gf_convio_server" name="gf_convio_server" value="<?php echo empty($settings["server"]) ? "" : esc_attr($settings["server"]) ?>" size="20"/>
+                    </td>
+                </tr>
+
                 <tr>
                     <td colspan="2" ><input type="submit" name="gf_convio_submit" class="button-primary" value="<?php _e("Save Settings", "gravity-forms-convio") ?>" /></td>
                 </tr>
@@ -462,12 +470,12 @@ class GFConvio {
 	    	extract($settings);    	
     	}
 
-        if( !empty($username) && !empty($password) && !empty($apikey) && !empty($shortname) ) {
+        if( !empty($username) && !empty($password) && !empty($apikey) && !empty($shortname) && !empty($server) ) {
 	
 	        self::log_debug("Validating login for api key '{$apikey}', username '{$username}',  password '{$password}' and short name '{$shortname}'");
 	        
 	        $api = new ConvioOpenAPI;
-			$api->host            = 'secure2.convio.net';
+			$api->host            = $server;
 			$api->api_key         = $apikey;
 			$api->short_name      = $shortname;
 	        $api->login_name      = $username;
@@ -479,7 +487,7 @@ class GFConvio {
 			// Set logs and return response
 			if( empty($auth) ){
 	        	self::log_error("Login valid: false. Nothing returned from Convio.");
-	        	return array('status' => false, 'message' => 'Site short name not found.');			
+	        	return array('status' => false, 'message' => 'Site short name not found or Server URL incorrect.');			
 			}
 			else if (isset($auth->errorResponse) ){
 	        	self::log_error("Login valid: false. Error " . $auth->errorResponse->code . " - " . $auth->errorResponse->message);
@@ -502,14 +510,14 @@ class GFConvio {
 	        extract($settings);        
         }
 
-        if( !empty($username) && !empty($password) && !empty($apikey) && !empty($shortname) ) {
+        if( !empty($username) && !empty($password) && !empty($apikey) && !empty($shortname) && !empty($server) ) {
 	    	if( !class_exists('ConvioOpenAPI') ){
 		    	require_once('inc/ConvioOpenAPI.php');
 	    	}
 	    	self::log_debug("Retriving authorization code for api key '{$apikey}', username '{$username}',  password '{$password}' and short name '{$shortname}'");
 
 	        $api = new ConvioOpenAPI;
-			$api->host            = 'secure2.convio.net';
+			$api->host            = $server;
 			$api->api_key         = $apikey;
 			$api->short_name      = $shortname;
 	        $api->login_name      = $username;
