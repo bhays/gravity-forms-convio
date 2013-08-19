@@ -1,7 +1,7 @@
 Gravity Forms Convio Add-on
 =============================
 
-Version 0.3
+Version 0.3.1
 
 WordPress plugin to link Gravity Forms with Convio Surveys through the Convio Open API. Useful for adding constituants or names to email lists (surveys) managed by Convio.
 
@@ -24,13 +24,16 @@ WordPress plugin to link Gravity Forms with Convio Surveys through the Convio Op
 
 ## Changelog
 
+### 0.3.1
+* jQuery fix for GF 1.7.7 tooltips
+
 ### 0.3
 * Add setting for Convio server URL
 
 ### 0.2
 * Fix whitespace/HTML issues from Convio question data
 
-### 0.1 
+### 0.1
 * Initial release
 
 ## License

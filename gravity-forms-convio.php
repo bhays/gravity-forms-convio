@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms Convio Add-on
 Plugin URI: https://github.com/bhays/gravity-forms-convio
 Description: Integrates Gravity Forms with Convio allowing form submissions to be automatically sent to your Convio account
-Version: 0.3
+Version: 0.3.1
 Author: Ben Hays
 Author URI: http://benhays.com
 
@@ -33,10 +33,10 @@ class GFConvio {
     private static $path = "gravity-forms-convio/gravity-forms-convio.php";
     private static $url = "http://www.gravityforms.com";
     private static $slug = "gravity-forms-convio";
-    private static $version = "0.3";
+    private static $version = "0.3.1";
     private static $min_gravityforms_version = "1.5";
     private static $supported_fields = array(
-	    				"checkbox", "radio", "select", "text", "website", "textarea", "email", 
+	    				"checkbox", "radio", "select", "text", "website", "textarea", "email",
 	    				"hidden", "number", "phone", "multiselect", "post_title",
 	                    "post_tags", "post_custom_field", "post_content", "post_excerpt"
 					);
@@ -198,15 +198,15 @@ class GFConvio {
         }
         else if(rgpost("gf_convio_submit")){
             check_admin_referer("update", "gf_convio_update");
-            
+
             $settings = array(
             	"apikey" => stripslashes($_POST["gf_convio_apikey"]),
-            	"username" => stripslashes($_POST["gf_convio_username"]), 
-            	"password" => stripslashes($_POST["gf_convio_password"]), 
+            	"username" => stripslashes($_POST["gf_convio_username"]),
+            	"password" => stripslashes($_POST["gf_convio_password"]),
             	"shortname" => $_POST["gf_convio_shortname"],
             	"server" => stripslashes($_POST["gf_convio_server"]),
             );
-            
+
             update_option("gf_convio_settings", $settings);
         }
         else{
@@ -215,7 +215,7 @@ class GFConvio {
 
         // Make sure username, password and short name are valid
         $is_valid = self::is_valid_login($settings);
-        
+
 		if( $is_valid['status'] ){
 			$message = __("Your credentials are valid.", "gravity-forms-convio");
 			$class = "valid_credentials";
@@ -333,7 +333,7 @@ class GFConvio {
 
         ?>
         <div class="wrap">
-            
+
             <h2><?php _e("Convio Survey Feeds", "gravity-forms-convio"); ?>
             <a class="add-new-h2" href="admin.php?page=gf_convio&view=edit&id=0"><?php _e("Add New", "gravity-forms-convio") ?></a>
             </h2>
@@ -465,29 +465,29 @@ class GFConvio {
     	if( !class_exists('ConvioOpenAPI') ){
 	    	require_once('inc/ConvioOpenAPI.php');
     	}
-    	
+
     	if( !empty($settings) ){
-	    	extract($settings);    	
+	    	extract($settings);
     	}
 
         if( !empty($username) && !empty($password) && !empty($apikey) && !empty($shortname) && !empty($server) ) {
-	
+
 	        self::log_debug("Validating login for api key '{$apikey}', username '{$username}',  password '{$password}' and short name '{$shortname}'");
-	        
+
 	        $api = new ConvioOpenAPI;
 			$api->host            = $server;
 			$api->api_key         = $apikey;
 			$api->short_name      = $shortname;
 	        $api->login_name      = $username;
 	        $api->login_password  = $password;
-	
+
 			// Get Auth token
 			$auth = $api->call('SRConsAPI_getSingleSignOnToken');
-			
+
 			// Set logs and return response
 			if( empty($auth) ){
 	        	self::log_error("Login valid: false. Nothing returned from Convio.");
-	        	return array('status' => false, 'message' => 'Site short name not found or Server URL incorrect.');			
+	        	return array('status' => false, 'message' => 'Site short name not found or Server URL incorrect.');
 			}
 			else if (isset($auth->errorResponse) ){
 	        	self::log_error("Login valid: false. Error " . $auth->errorResponse->code . " - " . $auth->errorResponse->message);
@@ -505,9 +505,9 @@ class GFConvio {
         //global convio settings
         $settings = get_option("gf_convio_settings");
         $api = null;
-        
+
         if( !empty($settings) ){
-	        extract($settings);        
+	        extract($settings);
         }
 
         if( !empty($username) && !empty($password) && !empty($apikey) && !empty($shortname) && !empty($server) ) {
@@ -522,7 +522,7 @@ class GFConvio {
 			$api->short_name      = $shortname;
 	        $api->login_name      = $username;
 	        $api->login_password  = $password;
-	
+
 			// Check
 			$auth = $api->call('SRConsAPI_getSingleSignOnToken');
 
@@ -542,7 +542,7 @@ class GFConvio {
 		self::log_debug("Successful API response received");
 
         return $api;
-	    
+
     }
     private static function get_auth_token(){
 
@@ -602,7 +602,7 @@ class GFConvio {
 		//getting setting id (0 when creating a new one)
         $id = !empty($_POST["convio_setting_id"]) ? $_POST["convio_setting_id"] : absint($_GET["id"]);
         $config = empty($id) ? array("meta" => array("double_optin" => true), "is_active" => true) : GFConvioData::get_feed($id);
-        
+
         if(!isset($config["meta"]))
             $config["meta"] = array();
 
@@ -633,9 +633,9 @@ class GFConvio {
 	            	// Constituent data here
 					foreach( $d->questionTypeData->consRegInfoData->contactInfoField as $f){
 						$field_name = "convio_map_field_".$f->fieldName;
-						
+
 		                $mapped_field = stripslashes($_POST[$field_name]);
-		                
+
 		                if(!empty($mapped_field)){
 							$field_map[$f->fieldName] = $mapped_field;
 		                }
@@ -643,22 +643,22 @@ class GFConvio {
 							unset($field_map[$f->fieldName]);
 							if( $f->fieldStatus == 'REQUIRED' ){
 								$is_valid = false;
-							}      
+							}
 						}
-					}	
+					}
             	}
             	else {
 	            	// Something else?
 	                $field_name = "convio_map_field_" . 'question_'.$d->questionID;
 	                $mapped_field = stripslashes($_POST[$field_name]);
-	
+
 	                if(!empty($mapped_field)){
 	                    $field_map['question_'.$field->questionID] = $mapped_field;
 	                }
 	                else{
 	                    unset($field_map['question_'.$d->questionID]);
 	                    if( $field->questionRequired ){
-		                    $is_valid = false;                    
+		                    $is_valid = false;
 	                    }
 	                }
             	}
@@ -909,20 +909,33 @@ class GFConvio {
                     for(var i in groups)
                         SetGroupCondition(groups[i]["main"], groups[i]["sub"],"","");
 
-                    //initializing convio group tooltip
-                    jQuery('.tooltip_convio_groups').qtip({
-                         content: jQuery('.tooltip_convio_groups').attr('tooltip'), // Use the tooltip attribute of the element for the content
-                         show: { delay: 500, solo: true },
-                         hide: { when: 'mouseout', fixed: true, delay: 200, effect: 'fade' },
-                         style: "gformsstyle",
-                         position: {
-                          corner: {
-                               target: "topRight",
-                               tooltip: "bottomLeft"
-                               }
-                          }
-                      });
+                    // Two tooltips now for GF 1.7.7 updates
+                    // qtip will be removed soon
+					if( jQuery.fn.tooltip )
+					{
+	                    jQuery( '.tooltip_wysija_groups' ).tooltip({
+	                        show: 500,
+	                        hide: 1000,
+	                        content: function () {
+	                            return jQuery(this).prop('title');
+	                        }
+	                    });
+					}
 
+					if( jQuery.fn.qtip ){
+	                    jQuery('.tooltip_wysija_groups').qtip({
+	                         content: jQuery('.tooltip_wysija_groups').attr('tooltip'), // Use the tooltip attribute of the element for the content
+	                         show: { delay: 500, solo: true },
+	                         hide: { when: 'mouseout', fixed: true, delay: 200, effect: 'fade' },
+	                         style: "gformsstyle",
+	                         position: {
+	                          corner: {
+	                               target: "topRight",
+	                               tooltip: "bottomLeft"
+	                               }
+	                          }
+	                      });
+					}
                     jQuery("#convio_field_group").slideDown();
 
                 }
@@ -1011,7 +1024,7 @@ class GFConvio {
 
             function IsConditionalLogicField(field){
 			    inputType = field.inputType ? field.inputType : field.type;
-			    var supported_fields = ["checkbox", "radio", "select", "text", "website", "textarea", 
+			    var supported_fields = ["checkbox", "radio", "select", "text", "website", "textarea",
 			    "email", "hidden", "number", "phone", "multiselect", "post_title",
 			                            "post_tags", "post_custom_field", "post_content", "post_excerpt"];
 
@@ -1064,46 +1077,46 @@ class GFConvio {
 
         //getting field map UI
         $field_map = self::get_field_mapping($config, $form_id, $details);
-        
+
         // Escape quotes and strip extra whitespace and line breaks
         $field_map = str_replace("'","\'",$field_map);
 		//$field_map = preg_replace('/[ \t]+/', ' ', preg_replace('/\s*$^\s*/m', "\n", $field_map));
-        
+
 		self::log_debug("Field map is set to: " . $field_map);
-        
+
         //getting list of selection fields to be used by the optin
         $form_meta = RGFormsModel::get_form_meta($form_id);
         $selection_fields = GFCommon::get_selection_fields($form_meta, rgars($config, "meta/optin_field_id"));
         $group_condition = array();
         $group_names = array();
         $grouping = '';
-        
+
         //fields meta
         $form = RGFormsModel::get_form_meta($form_id);
         die("EndSelectForm('".$field_map."', ".GFCommon::json_encode($form).", '" . str_replace("'", "\'", $grouping) . "', " . json_encode($group_names) . " );");
     }
 
     private static function get_field_mapping($config, $form_id, $details){
-	    	    
+
         //getting list of all fields for the selected form
         $form_fields = self::get_form_fields($form_id);
 
         $str = "<table cellpadding='0' cellspacing='0'><tr><td class='convio_col_heading'>" . __("Survey Fields", "gravity-forms-convio") . "</td><td class='convio_col_heading'>" . __("Form Fields", "gravity-forms-convio") . "</td></tr>";
-        
+
         if(!isset($config["meta"]))
             $config["meta"] = array("field_map" => "");
-		
+
 		foreach( $details as $d ){
-			// Constituant Data 
+			// Constituant Data
 			if( $d->questionType == "ConsQuestion" ){
 				foreach( $d->questionTypeData->consRegInfoData->contactInfoField as $f){
 		            $selected_field = rgar($config["meta"]["field_map"], $f->fieldName);
 		            $required = $f->fieldStatus == 'REQUIRED' ? "<span class='gfield_required'>*</span>" : '';
-		            
+
 		            $error_class = $f->fieldStatus == 'REQUIRED' && empty($selected_field) && !empty($_POST["gf_convio_submit"]) ? " feeds_validation_error" : "";
-		            
+
 		            $str .= "<tr class='$error_class'><td class='convio_field_cell'>".self::ws_clean($f->label)." $required</td><td class='convio_field_cell'>".self::get_mapped_field_list($f->fieldName, $selected_field, $form_fields)."</td></tr>";
-				}	
+				}
 			}
 			else {
 				$selected_field = rgar($config["meta"]["field_map"], 'question_'.$d->questionId);
@@ -1112,7 +1125,7 @@ class GFConvio {
 				$str .= "<tr class='$error_class'><td class='convio_field_cell'>".self::ws_clean($d->questionText)." $required</td><td class='convio_field_cell'>".self::get_mapped_field_list('question_'.$d->questionId, $selected_field, $form_fields)."</td></tr>";
 			}
 		}
-		
+
         $str .= "</table>";
 
         return $str;
@@ -1268,10 +1281,10 @@ class GFConvio {
 
         return true;
     }
-    
+
     // Magic goes here
     public static function export_feed($entry, $form, $feed, $api){
-	    
+
 		$double_optin = $feed["meta"]["double_optin"] ? true : false;
         $send_welcome = $feed["meta"]["welcome_email"] ? true : false;
         $email_field_id = $feed["meta"]["field_map"]["cons_email"];
@@ -1281,7 +1294,7 @@ class GFConvio {
 			'sso_auth_token' => self::get_auth_token(),
 			'survey_id' => $feed['meta']['survey_id'],
 		);
-        
+
         foreach( $feed['meta']['field_map'] as $k => $v ){
     		$field = RGFormsModel::get_field($form, $v);
 
@@ -1293,10 +1306,10 @@ class GFConvio {
 				$params[$k] = apply_filters("gform_convio_field_value", rgar($entry, $v), $form['id'], $v, $entry);
 			}
         }
-        
+
         // Send info to Convio
 		$res = $api->call('CRSurveyAPI_submitSurvey', $params);
-		
+
         //listSubscribe and listUpdateMember return true/false
         if (isset($res->errorResponse))
         {
@@ -1347,38 +1360,38 @@ class GFConvio {
         return $is_optin;
 
     }
-    
+
     private static function get_survey_details( $survey_id )
     {
 		$api = self::get_api();
-		
+
 		self::log_debug("Retrieving details for survey " . $survey_id);
 		$params = array(
 			'sso_auth_token' => self::get_auth_token(),
 			'survey_id' => $survey_id,
 		);
-		
+
 		$details = $api->call('CRSurveyAPI_getSurvey', $params);
-		
+
 		// Check for errors
 		if( isset($details->errorResponse) ){
         	self::log_error("Getting survey details. Error " . $details->errorResponse->code . " - " . $details->errorResponse->message);
         	return NULL;
 		}
-		
+
 		// Modify results to only send back questions
 		if( is_array($details->getSurveyResponse->survey->surveyQuestions) ){
 			$ret = $details->getSurveyResponse->survey->surveyQuestions;
 		}
 		else {
-			$ret[] = $details->getSurveyResponse->survey->surveyQuestions;			
+			$ret[] = $details->getSurveyResponse->survey->surveyQuestions;
 		}
-		
+
 		//self::log_debug("Details retrieved: " . print_r($ret,true));
 
 		return $ret;
     }
-    
+
     private static function is_gravityforms_installed(){
         return class_exists("RGForms");
     }
@@ -1401,15 +1414,15 @@ class GFConvio {
         else
             return false;
     }
-	
-	// Clean strings from Convio, we don't need any HTML or line breaks 
+
+	// Clean strings from Convio, we don't need any HTML or line breaks
     protected function ws_clean($string){
 	    $chars = array("
 ", "\n", "\r", "chr(13)",  "\t", "\0", "\x0B");
 	    $string = str_replace($chars, '', trim(strip_tags($string)));
 	    return $string;
     }
-    
+
     //Returns the url of the plugin's root folder
     protected function get_base_url(){
         return plugins_url(null, __FILE__);
